@@ -1,0 +1,8 @@
+name: myapp
+version: 1.1.0
+#description: any description here
+repository: s3://examplecom-anydep-ap-northeast-1/charts
+dependencies:
+- name: mylib
+  version: 1.0.0
+  repository: s3://examplecom-anydep-ap-northeast-1/charts

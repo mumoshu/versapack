@@ -1,0 +1,102 @@
+#!/usr/bin/env variant
+
+lib:
+  to_helm: &to_helm |
+    if [ -f anydep.lock ]; then
+      cp anydep.lock requirements.lock
+    fi
+
+    cat <<EOF > Chart.yaml
+    name: {{ get "name" }}
+    version: {{ get "version" }}
+    EOF
+
+    {{ $deps := get "dependencies" -}}
+
+    cat <<EOF > requirements.yaml
+    {{ if gt (len $deps) 0 -}}
+    dependencies:
+    {{ $deps | toYaml -}}
+    {{ else -}}
+    dependencies: []
+    {{ end -}}
+    EOF
+  clean: &clean |
+    rm requirements.lock
+
+parameters:
+- name: name
+- name: version
+- name: dependencies
+  type: array
+  default: []
+
+tasks:
+  ensure:
+    parameters:
+    - name: update
+      type: boolean
+      default: false
+    script:
+    - *to_helm
+    - |
+      {{ if get "update" -}}
+      {{ range $_, $d := $deps -}}
+      {{ $repo := (print ($d | dig "name") "-" ($d | dig "version" | replace "." "-" | replace "*" "x")) -}}
+      {{ $url := ($d | dig "repository") -}}
+      if ! helm repo list | grep {{ $url }}; then
+        helm repo add {{ $repo }} {{ $url }}
+      fi
+      {{ end -}}
+      helm dependency update
+      {{ else -}}
+      helm dependency build
+      {{ end }}
+
+      if [ ! -f requirements.lock ]; then
+        echo "`anydep ensure` failed" 1>&2
+        exit 1
+      fi
+      cp requirements.lock anydep.lock
+
+      wd=$(pwd)
+      charts=${wd}/charts
+
+      rm -rf vendor/anydep
+      mkdir -p vendor/anydep
+      cd vendor/anydep
+      find $charts | xargs -n 1 tar zxvf
+      cd "${wd}"
+    - *clean
+  package:
+    script:
+    - *to_helm
+    - |
+      helm package .
+    - *clean
+  push:
+    parameters:
+    - name: repository
+      default: "s3://mybucket/charts"
+    script: |
+      {{ $repo_url := get "repository" }}
+      {{ $repo := print (get "name") "-" (get "version" | replace "." "-") }}
+      {{ $pkg := print (get "name") "-" (get "version") ".tgz" }}
+
+      helm s3 init {{ $repo_url }}
+      helm repo add {{ $repo }} {{ $repo_url }}
+      helm s3 push {{ $pkg }} {{ $repo }}
+      helm repo remove {{ $repo }}
+  up:
+    steps:
+    - task: package
+    - task: push
+
+  utils:
+    tasks:
+      create-bucket:
+        parameters:
+        - name: name
+        - name: region
+        script: |
+          aws s3api create-bucket --bucket {{ get "name" }}-{{ get "region" }} --acl private --region {{ get "region" }} --create-bucket-configuration LocationConstraint={{ get "region" }}
