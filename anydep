@@ -2,8 +2,8 @@
 
 lib:
   to_helm: &to_helm |
-    if [ -f anydep.lock ]; then
-      cp anydep.lock requirements.lock
+    if [ -f {{ get "lockFile" ]; then
+      cp {{ get "lockFile" }} requirements.lock
     fi
 
     cat <<EOF > Chart.yaml
@@ -30,6 +30,12 @@ parameters:
 - name: dependencies
   type: array
   default: []
+- name: vendorPath
+  type: string
+  default: "vendor/anydep"
+- name: lockFile
+  type: string
+  default: "anydep.lock"
 
 tasks:
   ensure:
@@ -57,14 +63,15 @@ tasks:
         echo "`anydep ensure` failed" 1>&2
         exit 1
       fi
-      cp requirements.lock anydep.lock
+      cp requirements.lock {{ get "lockFile" }}
 
       wd=$(pwd)
       charts=${wd}/charts
 
-      rm -rf vendor/anydep
-      mkdir -p vendor/anydep
-      cd vendor/anydep
+      {{ $vendor := get "vendorPath" }}
+      rm -rf ./{{ $vendor }}
+      mkdir -p {{ $vendor }}
+      cd {{ $vendor }}
       find $charts | xargs -n 1 tar zxvf
       cd "${wd}"
     - *clean

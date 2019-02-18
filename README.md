@@ -37,7 +37,7 @@ dependencies:
   repository: s3://examplecom-anydep-ap-northeast-1/charts
 ```
 
-Resolve and fetch all the dependencies into `vendor/anydep/<pkg name>`:
+Resolve and fetch all the dependencies into `vendor/anydep/<pkg name>` by running `ensure -update`:
 
 ```
 $ anydep ensure --update
@@ -49,7 +49,7 @@ This will create a lock file named `anydep.lock`. It is strongly encounrated to 
 $ git add anydep.yaml anydep.lock
 ```
 
-Note that you shouldn't commit `vendor/anydep/<pkg name>` into the repository, but instaed do run `anydep ensure` to restore all the dependencies listed in the lock file:
+Note that you are not necessarily required to commit `vendor/anydep/<pkg name>` into the repository. Just run `anydep ensure` to restore all the dependencies listed in the lock file:
 
 ```
 $ anydep ensure
@@ -89,6 +89,42 @@ $ anydep up
 ```
 
 Great! Now that your anydep package is uploaded to the repository backed by the S3 bucket, you can import any files contained within the package into another anydep-managed projects.
+
+## Multi-Project Support
+
+You can collocate two or more `anydep` projects at the same level of the project tree.
+
+Just create one `anydep.yaml` variant per your project:
+
+```console
+$ tree ..
+├── variantdep.yaml
+├── helmfiledep.yaml
+```
+
+In each `anydep.*.yaml`, please don't forget to set `vendorPath` to something other than the default `vendor/anydep`, so that deps from one collocated project doesn't override those from the another:
+
+```yaml
+# variantdep.yaml
+vendorPath: vendor/variant
+lockFile: variantdep.lock
+```
+
+```yaml
+# helmfiledep.yaml
+vendorPath: vendor/helmfile
+lockFile: helmfiledep.lock
+```
+
+Finally, provide a `-c CONFIG_FILE` flag to `anydep` so that it uses the config file to resolve and fetch dependencies:
+
+```console
+$ anydep -c variantdep.yaml ensure --update
+$ anydep -c variantdep.yaml ensure
+
+$ anydep -c helmfiledep.yaml ensure --update
+$ anydep -c helmfiledep.yaml ensure
+```
 
 ## Use-cases
 
