@@ -12,7 +12,7 @@ Install `helm` and `helm-s3`:
 
 ```
 $ brew install kubernetes-helm
-$ helm init --client-only$
+$ helm init --client-only
 $ helm plugin install https://github.com/hypnoglow/helm-s3.git
 ```
 
