@@ -1,6 +1,6 @@
-# anydep
+# versapack
 
-`anydep` is a general-purpose project/application dependency manager. It is a tool like `godep`, `bundler`, `npm`, but for any sets of files.
+`versapack` is a general-purpose project/application dependency manager. It is a tool like `godep`, `bundler`, `npm`, but for any sets of files.
 
 ## Rationale
 
@@ -22,79 +22,79 @@ https://github.com/mumoshu/variant/releases/tag/v0.22.0
 
 ## Usage
 
-### Creating your app with deps managed by anydep
+### Creating your app with deps managed by versapack
 
-Place a `anydep.yaml`:
+Place a `versapack.yaml`:
 
 ```yaml
 name: myapp
 version: 1.0.0
 #Description: any description here
-repository: s3://examplecom-anydep-ap-northeast-1/charts
+repository: s3://examplecom-versapack-ap-northeast-1/charts
 dependencies:
 - name: commons
   version: 0.5.0
-  repository: s3://examplecom-anydep-ap-northeast-1/charts
+  repository: s3://examplecom-versapack-ap-northeast-1/charts
 ```
 
-Resolve and fetch all the dependencies into `vendor/anydep/<pkg name>` by running `ensure -update`:
+Resolve and fetch all the dependencies into `vendor/versapack/<pkg name>` by running `ensure -update`:
 
 ```
-$ anydep ensure --update
+$ versapack ensure --update
 ```
 
-This will create a lock file named `anydep.lock`. It is strongly encounrated to commit this into a versioned repository along with your `anydep.yaml`, usually a Git repository.
+This will create a lock file named `versapack.lock`. It is strongly encounrated to commit this into a versioned repository along with your `versapack.yaml`, usually a Git repository.
 
 ```
-$ git add anydep.yaml anydep.lock
+$ git add versapack.yaml versapack.lock
 ```
 
-Note that you are not necessarily required to commit `vendor/anydep/<pkg name>` into the repository. Just run `anydep ensure` to restore all the dependencies listed in the lock file:
+Note that you are not necessarily required to commit `vendor/versapack/<pkg name>` into the repository. Just run `versapack ensure` to restore all the dependencies listed in the lock file:
 
 ```
-$ anydep ensure
+$ versapack ensure
 ```
 
-If you're familiar with golang, `anydep ensure` corresponds to `dep ensure`, and `anydep ensure --update` is `dep ensure -update`.
+If you're familiar with golang, `versapack ensure` corresponds to `dep ensure`, and `versapack ensure --update` is `dep ensure -update`.
 
-If you're familiar with ruby/bundler, take `anydep ensure` as `bundle vendor`, and `anydep ensure --update` as `bundle update`.
+If you're familiar with ruby/bundler, take `versapack ensure` as `bundle vendor`, and `versapack ensure --update` as `bundle update`.
 
 ### Publishing a package
 
-`anydep up` packages up the whole project under the current working directory and uploads it into the Helm Chart repository described in your `anydep.yaml`.
+`versapack up` packages up the whole project under the current working directory and uploads it into the Helm Chart repository described in your `versapack.yaml`.
 
-Let's say you have a `anydep.yaml` like:
+Let's say you have a `versapack.yaml` like:
 
 ```yaml
 name: testdep
 version: 1.1.0
-repository: s3://examplecom-anydep-ap-northeast-1/charts
+repository: s3://examplecom-versapack-ap-northeast-1/charts
 ```
 
 and the project root looks like:
 
 ```console
 $ tree ..
-├── anydep.yaml
-├── anydep.lock
+├── versapack.yaml
+├── versapack.lock
 ├── myconfig.yaml
 ├── myscripts
 │   └── myshinyscript
 ```
 
-Running `anydep up` packages up all the files listed above into a tarball, and then uploads it to the S3 bucket `examplecom-anydep-ap-northeast-1` with an object key prefixed with `charts/`:
+Running `versapack up` packages up all the files listed above into a tarball, and then uploads it to the S3 bucket `examplecom-versapack-ap-northeast-1` with an object key prefixed with `charts/`:
 
 ```
-$ anydep up
+$ versapack up
 ```
 
-Great! Now that your anydep package is uploaded to the repository backed by the S3 bucket, you can import any files contained within the package into another anydep-managed projects.
+Great! Now that your versapack package is uploaded to the repository backed by the S3 bucket, you can import any files contained within the package into another versapack-managed projects.
 
 ## Multi-Project Support
 
-You can collocate two or more `anydep` projects at the same level of the project tree.
+You can collocate two or more `versapack` projects at the same level of the project tree.
 
-Just create one `anydep.yaml` variant per your project:
+Just create one `versapack.yaml` variant per your project:
 
 ```console
 $ tree ..
@@ -102,7 +102,7 @@ $ tree ..
 ├── helmfiledep.yaml
 ```
 
-In each `anydep.*.yaml`, please don't forget to set `vendorPath` to something other than the default `vendor/anydep`, so that deps from one collocated project doesn't override those from the another:
+In each `versapack.*.yaml`, please don't forget to set `vendorPath` to something other than the default `vendor/versapack`, so that deps from one collocated project doesn't override those from the another:
 
 ```yaml
 # variantdep.yaml
@@ -116,14 +116,14 @@ vendorPath: vendor/helmfile
 lockFile: helmfiledep.lock
 ```
 
-Finally, provide a `-c CONFIG_FILE` flag to `anydep` so that it uses the config file to resolve and fetch dependencies:
+Finally, provide a `-c CONFIG_FILE` flag to `versapack` so that it uses the config file to resolve and fetch dependencies:
 
 ```console
-$ anydep -c variantdep.yaml ensure --update
-$ anydep -c variantdep.yaml ensure
+$ versapack -c variantdep.yaml ensure --update
+$ versapack -c variantdep.yaml ensure
 
-$ anydep -c helmfiledep.yaml ensure --update
-$ anydep -c helmfiledep.yaml ensure
+$ versapack -c helmfiledep.yaml ensure --update
+$ versapack -c helmfiledep.yaml ensure
 ```
 
 ## Use-cases
