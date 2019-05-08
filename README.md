@@ -1,6 +1,6 @@
 # versapack
 
-`versapack` is a general-purpose project/application dependency manager. It is a tool like `godep`, `bundler`, `npm`, but for any sets of files.
+`versapack` is a versatile package manager. `gem` rather than `bundler` for Ruby, but for any sets of files.
 
 ## Rationale
 
